@@ -29,13 +29,17 @@ export async function deleteTodo(id:String,userId:String):Promise<bool>{
 }
 
 export async function getSignedUrl(id:String,userId:string){
-  createLogger("signing params "+id +  " "+userId)
-  const  item = await todoAccess.getTodo(id,userId);
-  return s3.getSignedUrl('putObject',{
-    Bucket: bucketName,
-    Key: item.todoId,
-    Expires: parseInt(expiration)
-});
+  console.log(id, " ", userId );
+  //const  item = await todoAccess.getTodo(id,userId);
+
+  const url= s3.getSignedUrl('putObject',{
+      Bucket: bucketName,
+      Key: id,
+      Expires: parseInt(expiration)
+  });
+  const imageUrl = 'https://'+bucketName+'.s3.amazonaws.com/'+id
+  await todoAccess.updateImage(imageUrl,id,userId);
+  return url;
 }
 
 export async function updateTodo(
@@ -56,7 +60,7 @@ export async function createTodo(
   return await todoAccess.createTodo({
     todoId: itemId,
     done: false,
-    attachmentUrl : "http://example.com",
+    attachmentUrl: "http://example.com/image",
     userId: userId,
     name: createTodoRequest.name,
     dueDate: createTodoRequest.dueDate,

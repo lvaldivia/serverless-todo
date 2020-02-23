@@ -28,13 +28,6 @@ provider:
     INDEX_NAME: TodosIdIndex
     AUTH_0_SECRET: Ofju-JpNpEZX5r7-bUmo1P_VR79UROyNSFoyt_2R5VKt3chT4Mj3TR6uoZWavgJy
   
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - s3:PutObject
-        - s3:GetObject
-      Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
-
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
@@ -56,6 +49,33 @@ custom:
 functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
+  GenerateUploadUrl:
+    handler: src/lambda/http/generateUploadUrl.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
+      - Effect: Allow
+        Action:
+          - "xray:PutTraceSegments"
+          - "xray:PutTelemetryRecords"
+        Resource:
+          - "*"
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.INDEX_NAME}
+    events:
+      - http:
+          method: post
+          cors: true
+          path: todos/{todoId}/attachment
   DeleteTodo:
     handler: src/lambda/http/deleteTodo.handler
     events:
@@ -104,6 +124,10 @@ functions:
   GetTodos:
     handler: src/lambda/http/getTodos.handler
     iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
       - Effect: Allow
         Action:
           - "xray:PutTraceSegments"

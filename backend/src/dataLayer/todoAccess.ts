@@ -49,13 +49,19 @@ export class TodoAccess {
   }
 
   async getTodo(id:String,userId:string):Promise<TodoItem>{
+    console.log(id," ",userId);
     const result = await this.docClient.query({
       TableName: this.todoTable,
-      KeyConditionExpression : "todoId = :todoId, userId = :id",
-      ExpressionAttributeValues : {
-        ":todoId" : id,
-        ":id" : userId
-      }
+      IndexName : this.indexName,
+      KeyConditionExpression: "#t = :todoId, #u = :userId",
+      ExpressionAttributeNames :{
+        "#t": "todoId",
+        "#u": "userId"
+      },
+      ExpressionAttributeValues:{
+          ":todoId" : id,
+          ":userId" : userId
+      },
     }).promise()
     if(result.Items.length>0){
       return result.Items[0] as TodoItem;
@@ -82,7 +88,30 @@ export class TodoAccess {
           ":n" : todo.name,
           ":dd" : todo.dueDate,
           ":d" : todo.done
-        }
+        },
+        ReturnValues:"UPDATED_NEW"
+      }
+    ).promise();
+
+    return true;
+  }
+
+  async updateImage(url:String,id:String,userId:string):Promise<bool>{
+    await this.docClient.update(
+      {
+        TableName:this.todoTable,
+        Key:{
+          "todoId" : id,
+          "userId" : userId
+        },
+        UpdateExpression: "set #n=:n",
+        ExpressionAttributeNames :{
+          "#n": "attachmentUrl"
+        },
+        ExpressionAttributeValues:{
+          ":n" : url,
+        },
+        ReturnValues:"UPDATED_NEW"
       }
     ).promise();
 
