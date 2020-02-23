@@ -48,13 +48,13 @@ export class TodoAccess {
     return items as TodoItem[]
   }
 
-  async getTodo(id:String):Promise<TodoItem>{
+  async getTodo(id:String,userId:string):Promise<TodoItem>{
     const result = await this.docClient.query({
       TableName: this.todoTable,
       KeyConditionExpression : "todoId = :todoId, userId = :id",
       ExpressionAttributeValues : {
         ":todoId" : id,
-        ":id" : "1" 
+        ":id" : userId
       }
     }).promise()
     if(result.Items.length>0){

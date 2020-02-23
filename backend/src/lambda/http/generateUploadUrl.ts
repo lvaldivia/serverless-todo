@@ -10,6 +10,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   createLogger("Getting delete event "+event);
   const userId = getUserId(event)
   createLogger("Get user from JWT "+userId);
-  
+  //solo falta esto
   return undefined
 }
